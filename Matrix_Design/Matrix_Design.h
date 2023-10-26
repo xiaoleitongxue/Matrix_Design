@@ -4,19 +4,25 @@
 #pragma once
 
 #include <iostream>
+#include <array>
+namespace Matrix_impl {
+	template<typename T, size_t N>
+	struct Matrix_init {
+		using type = std::initializer_list<typename Matrix_init<T, N - 1>::type>;
+	};
+
+	template<typename T>
+	struct Matrix_init<T, 1> {
+		using type = std::initializer_list<T>;
+	};
+}
+
+
+
+
 
 template<typename T, size_t N>
-struct Matrix_init {
-	using type = std::initializer_list<typename Matrix_init<T, N - 1>::type>;
-};
-
-template<typename T>
-struct Matrix_init<T, 1> {
-	using type = std::initializer_list<T>;
-};
-
-template<typename T, size_t N>
-using Matrix_initializer = typename Matrix_init<T, N>::type;
+using Matrix_initializer = typename Matrix_impl::Matrix_init<T, N>::type;
 
 
 
@@ -42,14 +48,9 @@ template<typename T, size_t N>
 class Matrix_base {
 	// common stuff
 public:
-	static constexpr size_t order = N; // dim
 	using value_type = T;
 	using iterator = typename std::vector<T>::iterator;
-	using const_iterator = typename std::vector<T>::const_iterator;
-
-	
-
-		
+	using const_iterator = typename std::vector<T>::const_iterator;		
 };
 
 
@@ -67,14 +68,15 @@ template<typename T, size_t N>
 class Matrix : public Matrix_base<T, N> {
 	// special to matrix
 public:
+	static constexpr size_t order = N; // dim
 	Matrix() = default;
-	Matrix(Matrix&) = default; // move constructor
-	Matrix& operator=(Matrix&&) = default; // move assign
-	Matrix(Matrix const&) = default;
-	Matrix& operator=(Matrix const&) = default;
+	Matrix(Matrix&&) = default; // move constructor
+	Matrix& operator=(Matrix&&) = default; // move assignment
+	Matrix(Matrix const&) = default; // copy constructor
+	Matrix& operator=(Matrix const&) = default; // copy assignment
 	~Matrix() = default;
 
-	static constexpr size_t order() { return N; } // number of dimensions
+	//static constexpr size_t order() { return N; } // number of dimensions
 	size_t extent(size_t n) const { return desc.extents[n]; } // # elements in the nth dimension
 
 	template<typename U>
@@ -115,6 +117,8 @@ public:
 	//Matrix& operator*+(const T & value);
 	//Matrix& operator/+(const T & value);
 
+	
+
 private:
 	Matrix_slice<N> desc;
 	std::vector<T> elements;
@@ -122,21 +126,21 @@ private:
 
 template<size_t N>
 template<typename ...Dims>
-inline Matrix_slice<N>::Matrix_slice(Dims... dims):extents{size_t(dims)...}
+inline Matrix_slice<N>::Matrix_slice(Dims... dims):extents{size_t(dims)...}, strides(N)
 {
 	static_assert(sizeof...(Dims) == N, "");
 	size = (dims * ...);
 	size_t args[N]{ size_t(dims)... }; // copy arguments into an array
-	size_t temp[N + 2]{ 1 };
+	size_t temp[N + 2];
+	std::fill(temp, temp + N + 2, size_t(1));
 	for (int i = 0; i < N; ++i) {
 		temp[i] = args[i];
 	}
-	for (int i = N + 2 - 2; i >= 0; --i) {
-		temp[i] = temp[i] * temp[i + 1];
-	}
-
-	for (int i = 0; i < N; ++i) {
-		strides[i] = temp[i];
+	for (int i = N + 2 - 3; i >= 0; --i) {
+		strides[i] = 1;
+		for(int j = N + 2 - 1; j > i; --j){
+			strides[i] *= temp[j];
+		}
 	}
 	start = size_t(0);
 
@@ -203,19 +207,11 @@ inline Matrix_slice<N>::Matrix_slice(size_t s, std::initializer_list<size_t> ext
 	for (size_t i = 0; i < strs.size(); ++i) {
 		strides[i] = strs[i];
 	}
-	
-
-
-
 }
 
-template<typename T, size_t N>
-template<typename ...Exts>
-inline Matrix<T, N>::Matrix(Exts ...exts) :desc{ exts }, elements((exts * ...), 0)
+template <typename T, size_t N>
+template <typename... Exts>
+inline Matrix<T, N>::Matrix(Exts... exts):desc{size_t(exts)...}, elements(desc.size)
 {
-	// init elements
-
 
 }
-
-
