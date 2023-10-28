@@ -1,0 +1,17 @@
+[
+  {
+    "name": "Clang 16.0.2 x86_64-pc-windows-gnu",
+    "compilers": {
+      "C": "C:\\Program Files\\LLVM\\bin\\clang.exe",
+      "CXX": "C:\\Program Files\\LLVM\\bin\\clang++.exe"
+    },
+    "isTrusted": true,
+    "preferredGenerator": {
+      "name": "Ninja"
+    },
+    "cmakeSettings": {
+      "CMAKE_C_COMPILER_TARGET":"x86_64-pc-windows-gnu",
+      "CMAKE_CXX_COMPILER_TARGET":"x86_64-pc-windows-gnu"
+    }
+  }
+]
