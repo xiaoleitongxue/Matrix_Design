@@ -1,9 +1,17 @@
 {
     "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Matrix_Design_Test_Ubuntu",
+            "program": "${workspaceFolder}/build/Matrix_Design/Matrix_Design_Test",
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
     {
         "type": "lldb",
         "request": "launch",
-        "name": "Matrix_Design_Test",
+        "name": "Matrix_Design_Test_Windows",
         "program": "${workspaceFolder}/build/Matrix_Design/Matrix_Design_Test.exe",
         "args": [],
         "cwd": "${workspaceFolder}"

@@ -4,11 +4,12 @@
 #pragma once
 
 #include <array>
-#include <corecrt.h>
+#include <cstddef>
 #include <initializer_list>
 #include <iostream>
+#include <ostream>
 #include <type_traits>
-template<bool B, typename T>
+template <bool B, typename T>
 using Enable_if = typename std::enable_if<B, T>::type;
 
 namespace Matrix_impl {
@@ -78,24 +79,26 @@ void insert_flat(std::initializer_list<T> list, Vec &vec) {
 template <size_t N, typename Array>
 std::array<size_t, N> computing_stride(const Array &extents) {
   std::array<size_t, N> strides;
-  size_t temp[N + 2];
-  std::fill(temp, temp + N + 2, size_t(1));
-  for (int i = 0; i < N; ++i) {
-    temp[i] = extents[i];
-  }
-  for (int i = N + 2 - 3; i >= 0; --i) {
+
+  // init all stride to 1
+  for(size_t i = 0; i < N; ++i){
     strides[i] = 1;
-    for (int j = N + 2 - 1; j > i; --j) {
-      strides[i] *= temp[j];
+  }
+
+  for(size_t i = 0; i < N - 1; ++i){
+    int product = 1;
+    for(size_t j = i + 1; j < N; ++j){
+      product *= extents[j];
     }
+    strides[i] = product;
   }
   return strides;
 }
 
-template<size_t N, typename Array>
-size_t computing_size(const Array & extents){
+template <size_t N, typename Array>
+size_t computing_size(const Array &extents) {
   size_t size = 1;
-  for(int i = 0; i < N; ++i){
+  for (int i = 0; i < N; ++i) {
     size *= extents[i];
   }
   return size;
@@ -186,6 +189,9 @@ public:
 
   template <typename U> Matrix &operator=(std::initializer_list<U>) = delete;
 
+  friend std::ostream& operator<<(std::ostream& os, const Matrix& m);
+
+
   size_t size() const { return elements.size(); } // total number of elements
 
   const Matrix_slice<N> &descriptor() const {
@@ -208,6 +214,9 @@ public:
   // Matrix& operator*+(const T & value);
   // Matrix& operator/+(const T & value);
 
+
+
+
 private:
   Matrix_slice<N> desc;
   std::vector<T> elements;
@@ -220,7 +229,6 @@ inline Matrix_slice<N>::Matrix_slice(Dims... dims)
   static_assert(sizeof...(Dims) == N, "");
   size = (dims * ...);
   strides = Matrix_impl::computing_stride<N>(extents);
-
   start = size_t(0);
 }
 
@@ -241,7 +249,6 @@ inline Matrix_slice<N>::Matrix_slice(size_t s,
   size = Matrix_impl::computing_size<N>(extents);
 
   strides = Matrix_impl::computing_stride<N>(extents);
-
 }
 
 template <size_t N>
@@ -267,4 +274,10 @@ Matrix<T, N>::Matrix(Matrix_initializer<T, N> list) {
   desc.strides = strides;
   desc.size = Matrix_impl::computing_size<N>(extents);
   Matrix_impl::insert_flat(list, this->elements);
+}
+template <typename T, size_t N>
+std::ostream& operator<<(std::ostream& os, const Matrix<T, N>& m)
+{
+    os << m.get_order();
+    return os;
 }

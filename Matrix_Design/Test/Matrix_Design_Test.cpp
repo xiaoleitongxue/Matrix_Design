@@ -25,6 +25,11 @@ int sum(int const &value1, int const &value2) { return value1 + value2; }
 
 TEST(Matrix_design_test, Simple_test) { sum(1, 2); }
 
+// TEST(Matrix_design_test, Matrix_0){
+//   Matrix<int, 0> m0(0);
+// }
+
+
 TEST(Matrix_design_test, Matrix_1) {
   Matrix<int, 1> m1(3);
   EXPECT_EQ(m1.descriptor().size, 3);
