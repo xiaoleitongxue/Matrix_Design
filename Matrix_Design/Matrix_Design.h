@@ -82,13 +82,13 @@ std::array<size_t, N> computing_stride(const Array &extents) {
   std::array<size_t, N> strides;
 
   // init all stride to 1
-  for(size_t i = 0; i < N; ++i){
+  for (size_t i = 0; i < N; ++i) {
     strides[i] = 1;
   }
 
-  for(size_t i = 0; i < N - 1; ++i){
+  for (size_t i = 0; i < N - 1; ++i) {
     size_t product = 1;
-    for(size_t j = i + 1; j < N; ++j){
+    for (size_t j = i + 1; j < N; ++j) {
       product *= extents[j];
     }
     strides[i] = product;
@@ -104,6 +104,8 @@ size_t computing_size(const Array &extents) {
   }
   return size;
 }
+
+
 
 } // namespace Matrix_impl
 
@@ -190,8 +192,7 @@ public:
 
   template <typename U> Matrix &operator=(std::initializer_list<U>) = delete;
 
-  friend std::ostream& operator<<(std::ostream& os, const Matrix& m);
-
+  friend std::ostream &operator<<(std::ostream &os, const Matrix &m);
 
   size_t size() const { return elements.size(); } // total number of elements
 
@@ -215,8 +216,7 @@ public:
   // Matrix& operator*+(const T & value);
   // Matrix& operator/+(const T & value);
 
-
-
+  Matrix_ref<T, N - 1> row(size_t n);
 
 private:
   Matrix_slice<N> desc;
@@ -276,9 +276,18 @@ Matrix<T, N>::Matrix(Matrix_initializer<T, N> list) {
   desc.size = Matrix_impl::computing_size<N>(extents);
   Matrix_impl::insert_flat(list, this->elements);
 }
+
 template <typename T, size_t N>
-std::ostream& operator<<(std::ostream& os, const Matrix<T, N>& m)
-{
-    os << m.get_order();
-    return os;
+std::ostream &operator<<(std::ostream &os, const Matrix<T, N> &m) {
+  
+  os << m.get_order();
+  return os;
+}
+
+template<typename T, size_t N>
+Matrix_ref<T, N - 1> Matrix<T, N>::row(size_t n){
+  assert(n < rows());
+  Matrix_slice<N - 1> row;
+  Matrix_impl::slice_dim<0>(n, desc, row);
+  return {row, data()};
 }
