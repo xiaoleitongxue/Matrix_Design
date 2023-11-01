@@ -3,13 +3,22 @@
 
 #pragma once
 
+#include <algorithm>
 #include <array>
 #include <cstddef>
 #include <initializer_list>
 #include <iostream>
+#include <iterator>
 #include <ostream>
 #include <type_traits>
 #include <vcruntime.h>
+
+// decaler class prototype
+template <size_t N> struct Matrix_slice;
+template <typename T, size_t N> class Matrix_base;
+template <typename T, size_t N> class Matrix_ref;
+template <typename T, size_t N> class Matrix;
+
 template <bool B, typename T>
 using Enable_if = typename std::enable_if<B, T>::type;
 
@@ -105,7 +114,35 @@ size_t computing_size(const Array &extents) {
   return size;
 }
 
+template <size_t N, typename... Dims>
+bool check_bounds(const Matrix_slice<N> &slice, Dims... dims) {
+  size_t indexes[N]{size_t(dims)...};
+  return std::equal(indexes, indexes + N, slice.extents, std::less<size_t>{});
+}
+constexpr bool All() { return true; }
 
+template <typename... Args> constexpr bool All(bool b, Args... args) {
+  return b && All(args);
+}
+
+template <typename... Args> constexpr bool Requesting_element() {
+  return All(std::is_convertible<Args, size_t>()...);
+}
+
+
+
+
+template<size_t N, typename T, typename... Args>
+size_t do_slice(const Matrix_slice<N>& os, Matrix_slice<N>& ns, const T& s, const Args&... args){
+  size_t m = do_slice_dim<sizeof...(Args) + 1>(os, ns, s);
+  size_t n = do_slice(os, ns, args...);
+  return m + n;
+}
+
+template<size_t N>
+size_t do_slice(const Matrix_slice<N> &os, Matrix_slice<N> &ns){
+  return 0;
+}
 
 } // namespace Matrix_impl
 
@@ -218,6 +255,17 @@ public:
 
   Matrix_ref<T, N - 1> row(size_t n);
 
+  Matrix_ref<T, N - 1> column(size_t n);
+
+  template <typename... Args>
+  Enable_if<Matrix_impl::Requesting_element<Args...>(), T &>
+  operator()(Args... args);
+
+  template <typename... Args>
+  Enable_if<Matrix_impl::Requesting_element<Args...>(), Matrix_ref<T, N>>
+  operator()(const Args &...args);
+
+  std::ostream& print_matrix(std::ostream& out, const Matrix &m);
 private:
   Matrix_slice<N> desc;
   std::vector<T> elements;
@@ -279,15 +327,43 @@ Matrix<T, N>::Matrix(Matrix_initializer<T, N> list) {
 
 template <typename T, size_t N>
 std::ostream &operator<<(std::ostream &os, const Matrix<T, N> &m) {
-  
+
   os << m.get_order();
   return os;
 }
+template <typename T, size_t N>
+std::ostream& Matrix<T, N>::print_matrix(std::ostream& out, const Matrix<T, N> &m){
+  
+}
 
-template<typename T, size_t N>
-Matrix_ref<T, N - 1> Matrix<T, N>::row(size_t n){
+template <typename T, size_t N>
+Matrix_ref<T, N - 1> Matrix<T, N>::row(size_t n) {
   assert(n < rows());
   Matrix_slice<N - 1> row;
   Matrix_impl::slice_dim<0>(n, desc, row);
   return {row, data()};
+}
+
+template <typename T, size_t N>
+Matrix_ref<T, N - 1> Matrix<T, N>::column(size_t n) {
+  assert(n < cols());
+  Matrix_slice<N - 1> col;
+  Matrix_impl::slice_dim<1>(n, desc, col);
+  return {col, data()};
+}
+
+template <typename T, size_t N>
+template <typename... Args>
+Enable_if<Matrix_impl::Requesting_element<Args...>(), T &>
+Matrix<T, N>::operator()(Args... args) {
+  assert(Matrix_impl::check_bounds(desc, args...));
+  return *(data() + desc(args...));
+}
+
+template <typename T, size_t N>
+template <typename... Args>
+Enable_if<Matrix_impl::Requesting_element<Args...>(), Matrix_ref<T, N>>
+Matrix<T, N>::operator()(const Args &...args) {
+  Matrix_slice<N> d;
+  d.start = Matrix_impl::do_slice(desc, d, args...);
 }
