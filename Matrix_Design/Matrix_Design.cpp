@@ -2,12 +2,12 @@
 //
 
 #include "Matrix_Design.h"
+#include <iostream>
 
-using namespace std;
 
 int main()
 {
-	cout << "Hello CMake." << endl;
+	std::cout << "Hello CMake." << std::endl;
 	Matrix<int, 3> m(3,4,2);
 	return 0;
 }

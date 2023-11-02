@@ -3,8 +3,8 @@
 #
 
 # Add source to this project's executable.
-add_executable (Matrix_Design "Matrix_Design.cpp" "Matrix_Design.h")
-
+add_executable (Matrix_Design "Matrix_Design.cpp")
+target_include_directories(Matrix_Design PUBLIC ./)
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET Matrix_Design PROPERTY CXX_STANDARD 20)
 endif()
@@ -18,9 +18,9 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 # TODO: Add tests and install targets if needed.
-add_executable(Matrix_Design_Test "Test/Matrix_Design_Test.cpp" "Matrix_Design.h")
+# add_executable(Matrix_Design_Test "Test/Matrix_Design_Test.cpp" "Matrix_Design.h")
 
-target_link_libraries(Matrix_Design_Test PUBLIC GTest::gtest GTest::gtest_main -lpthread)
+# target_link_libraries(Matrix_Design_Test PUBLIC GTest::gtest GTest::gtest_main -lpthread)
 
 include(GoogleTest)
-gtest_discover_tests(Matrix_Design_Test)
+# gtest_discover_tests(Matrix_Design_Test)

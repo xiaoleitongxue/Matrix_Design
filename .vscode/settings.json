@@ -4,7 +4,6 @@
         "--compile-commands-dir=${workspaceFolder}/build",
         "--background-index",
         "--clang-tidy",
-        "--query-driver=C:/Program Files/LLVM/bin/clang*"
     ],
     "clangd.checkUpdates": true,
 }
