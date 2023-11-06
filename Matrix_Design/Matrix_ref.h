@@ -1,6 +1,7 @@
 #pragma once
 #include "Matrix_slice.h"
 #include "Matrix_base.h"
+#include <vcruntime.h>
 template <typename T, size_t N> class Matrix_ref;
 // A Matrix_ref simply points to the elements of its Matrix
 template <typename T, size_t N> class Matrix_ref : public Matrix_base<T, N> {

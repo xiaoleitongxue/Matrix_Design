@@ -68,7 +68,7 @@ template <typename... Args> constexpr bool Some(bool b, Args... args) {
 
 
 template <typename... Args> constexpr bool Requesting_slice() {
-  // 所有实参都能转换为slice或size_t 或 至少有一个能转为slice
+  // 所有实参都能转换为slice或size_t 且 至少有一个能转为slice
   return All((Convertible<Args, size_t>() || Same<Args,Matrix_slice<sizeof...(Args)>>())...) && Some(Same<Args,Matrix_slice<sizeof...(Args)>>()...);;
 }
 
@@ -98,8 +98,29 @@ size_t do_slice(const Matrix_slice<N> &os, Matrix_slice<N> &ns) {
   return 0;
 }
 
+// slice dim 0;
 template <size_t dim, typename T, size_t N>
-void slice_dim(size_t n, Matrix_slice<N> &desc, Matrix_slice<N> &row) {}
+Enable_if<(dim == 0), void> slice_dim(size_t n, Matrix_slice<N> &desc, Matrix_slice<N> &row) {
+  row.start = n * desc.strides[0];
+  std::copy(desc.extents.begin() + 1, desc.extents.end(), row.extents);
+  std::copy(desc.strides.begin() + 1, desc.strides.end(), row.strides);
+  row.size = computing_size<N - 1>(row.extents);
+}
+
+//slice dim 1
+template <size_t dim, typename T, size_t N>
+Enable_if<(dim == 1), void> slice_dim(size_t n, Matrix_slice<N> &desc, Matrix_slice<N> &col) {
+  col.start = n * desc.strides[1];
+  size_t j = 0;
+  for(size_t i = 0; i < N; ++i){
+    if(i == 1){
+      continue;
+    }
+    col.extents[j++] = desc.extents[i];
+    col.strides[j++] = desc.strides[i];
+  }
+  col.size = computing_size<N - 1>(col.extents);
+}
 
 template <size_t N, typename Array>
 size_t computing_size(const Array &extents) {
