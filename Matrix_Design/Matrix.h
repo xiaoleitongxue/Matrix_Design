@@ -4,6 +4,9 @@
 #include "Matrix_ref.h"
 #include "Matrix_slice.h"
 #include "common.h"
+#include <array>
+#include <initializer_list>
+#include <numeric>
 #include <ostream>
 #include <stdio.h>
 #include <vcruntime.h>
@@ -92,8 +95,8 @@ public:
   Matrix(std::initializer_list<U>) = delete; // don't use {} except for elements
 
   template <typename U> Matrix &operator=(std::initializer_list<U>) = delete;
-
-  friend std::ostream &operator<<(std::ostream &os, const Matrix &m);
+  template <typename T1, size_t N1>
+  friend std::ostream &operator<<(std::ostream &os, const Matrix<T1, N1> &m);
 
   size_t size() const { return elems.size(); } // total number of elements
 
@@ -168,40 +171,98 @@ template <typename T, size_t N>
 Matrix<T, N>::Matrix(Matrix_initializer<T, N> list) {
   std::array<size_t, N> extents = Matrix_impl::derive_extents<N>(list);
   std::array<size_t, N> strides = computing_stride<N>(extents);
-
+  desc.start = 0;
   desc.extents = extents;
   desc.strides = strides;
   desc.size = computing_size<N>(extents);
-  Matrix_impl::insert_flat(list, this->elements);
+  Matrix_impl::insert_flat(list, this->elems);
 }
 
-template <typename T, size_t N>
-std::ostream &operator<<(std::ostream &os, const Matrix<T, N> &m) {
+template <typename T1, size_t N1>
+std::ostream &operator<<(std::ostream &os, const Matrix<T1, N1> &m) {
 
-  os << print_matrix<N>(os, m);
+  print_matrix<N1>(os, m, {});
+
   return os;
 }
-template <typename T, size_t N, typename... Args>
-Enable_if<(N > 1), std::ostream &>
-print_matrix(std::ostream &out, const Matrix<T, N> &m, Args... args) {
-  out << '[';
-  for (size_t i = 0; i < 5; ++i) {
-    print_matrix<N - 1>(out, m, args..., i);
+template <size_t dim, typename T1, size_t N1>
+Enable_if<(dim > 3), void> print_matrix(std::ostream &out,
+                                        const Matrix<T1, N1> &m,
+                                        const std::vector<size_t> indexes) {
+  out << "[";
+  for (size_t i = 0; i < m.descriptor().extents[N1 - dim]; ++i) {
+    std::vector<size_t> current_indexes{indexes.begin(), indexes.end()};
+    current_indexes.push_back(i);
+    if(i > 0){
+      for(size_t i = 0; i < N1 - dim; i++){
+        out << " ";
+      }
+    }
+    print_matrix<dim - 1>(out, m, current_indexes);
   }
-  out << ']';
-  return out;
+  out << "]";
 }
 
-template <typename T, size_t N, typename... Args>
-Enable_if<(N == 1), std::ostream &>
-print_matrix(std::ostream &out, const Matrix<T, N> &m, Args... args) {
-
-  out << '[';
-  for (size_t i = 0; i < 3; ++i) {
-    std::cout << m(args..., i) << ", ";
+template <size_t dim, typename T1, size_t N1>
+Enable_if<(dim == 3), void> print_matrix(std::ostream &out,
+                                         const Matrix<T1, N1> &m,
+                                         const std::vector<size_t> indexes) {
+  out << "[";
+  for (size_t i = 0; i < m.descriptor().extents[N1 - dim]; ++i) {
+    std::vector<size_t> current_indexes{indexes.begin(), indexes.end()};
+    current_indexes.push_back(i);
+    if(i > 0){
+      for(size_t i = 0; i < N1 - dim + 1; i++){
+        out << " ";
+      }
+    }
+    print_matrix<dim - 1>(out, m, current_indexes);
+    if(i < m.descriptor().extents[N1 - dim] - 1){
+      out << "," << std::endl << std::endl;
+    }
   }
-  out << "]," << std::endl;
-  return out;
+  out << "]";
+}
+
+
+template <size_t dim, typename T1, size_t N1>
+Enable_if<(dim == 2), void> print_matrix(std::ostream &out,
+                                         const Matrix<T1, N1> &m,
+                                         const std::vector<size_t> indexes) {
+  out << "[";
+  for (size_t i = 0; i < m.descriptor().extents[N1 - dim]; ++i) {
+    std::vector<size_t> current_indexes{indexes.begin(), indexes.end()};
+    current_indexes.push_back(i);
+    if(i > 0){
+      for(size_t i = 0; i < N1 - dim + 1; i++){
+        out << " ";
+      }
+    }
+    print_matrix<dim - 1>(out, m, current_indexes);
+    if(i < m.descriptor().extents[N1 - dim] - 1){
+      out << "," << std::endl;
+    }
+  }
+  out << "]";
+}
+
+template <size_t dim, typename T1, size_t N1>
+Enable_if<(dim == 1), void> print_matrix(std::ostream &out,
+                                         const Matrix<T1, N1> &m,
+                                         const std::vector<size_t> indexes) {
+  out << "[";
+  for (size_t i = 0; i < m.descriptor().extents[N1 - dim]; ++i) {
+    std::vector<size_t> current_indexes{indexes.begin(), indexes.end()};
+    current_indexes.push_back(i);
+    size_t index =
+        std::inner_product(current_indexes.begin(), current_indexes.end(),
+                           m.descriptor().strides.begin(), size_t(0));
+    out << *(m.data() + index);
+    if (i < m.descriptor().extents[N1 - dim] - 1) {
+      out << ", ";
+    }
+  }
+  out << "]";
 }
 
 template <typename T, size_t N>
