@@ -1,8 +1,12 @@
 #pragma once
+#include "Matrix.h"
 #include "Matrix_base.h"
 #include "Matrix_ref.h"
 #include "Matrix_slice.h"
 #include "common.h"
+#include <ostream>
+#include <stdio.h>
+#include <vcruntime.h>
 
 template <typename T, size_t N>
 using Matrix_initializer = typename Matrix_impl::Matrix_init<T, N>::type;
@@ -40,16 +44,13 @@ public:
   using value_type = T;
 
   Matrix(const T &x) : elems(x) {}
-  Matrix &operator=(const Matrix &value) {
-    
-    return *this;
-  }
+  Matrix &operator=(const Matrix &value) { return *this; }
 
-//   T &operator()() { return elem; }
-//   T &operator()() const { return elem; }
+  //   T &operator()() { return elem; }
+  //   T &operator()() const { return elem; }
 
-//   operator T &() { return elem; }
-//   operator const T &() { return elem; }
+  //   operator T &() { return elem; }
+  //   operator const T &() { return elem; }
 
   T &row(size_t i);
 
@@ -139,8 +140,6 @@ public:
   Enable_if<Requesting_slice<Args...>(), Matrix_ref<T, N>>
   operator()(const Args &...args) const;
 
-  std::ostream &print_matrix(std::ostream &out, const Matrix &m);
-
   int rows() {
     int rs = 1;
     if (N == 1) {
@@ -179,12 +178,31 @@ Matrix<T, N>::Matrix(Matrix_initializer<T, N> list) {
 template <typename T, size_t N>
 std::ostream &operator<<(std::ostream &os, const Matrix<T, N> &m) {
 
-  os << m.get_order();
+  os << print_matrix<N>(os, m);
   return os;
 }
-template <typename T, size_t N>
-std::ostream &Matrix<T, N>::print_matrix(std::ostream &out,
-                                         const Matrix<T, N> &m) {}
+template <typename T, size_t N, typename... Args>
+Enable_if<(N > 1), std::ostream &>
+print_matrix(std::ostream &out, const Matrix<T, N> &m, Args... args) {
+  out << '[';
+  for (size_t i = 0; i < 5; ++i) {
+    print_matrix<N - 1>(out, m, args..., i);
+  }
+  out << ']';
+  return out;
+}
+
+template <typename T, size_t N, typename... Args>
+Enable_if<(N == 1), std::ostream &>
+print_matrix(std::ostream &out, const Matrix<T, N> &m, Args... args) {
+
+  out << '[';
+  for (size_t i = 0; i < 3; ++i) {
+    std::cout << m(args..., i) << ", ";
+  }
+  out << "]," << std::endl;
+  return out;
+}
 
 template <typename T, size_t N>
 Matrix_ref<T, N - 1> Matrix<T, N>::row(size_t n) {

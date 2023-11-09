@@ -18,9 +18,9 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 # TODO: Add tests and install targets if needed.
-# add_executable(Matrix_Design_Test "Test/Matrix_Design_Test.cpp" "Matrix_Design.h")
+add_executable(Matrix_Design_Test "Test/Matrix_Design_Test.cpp" "Matrix_Design.h")
 
-# target_link_libraries(Matrix_Design_Test PUBLIC GTest::gtest GTest::gtest_main -lpthread)
+target_link_libraries(Matrix_Design_Test PUBLIC GTest::gtest GTest::gtest_main -lpthread)
 
 include(GoogleTest)
-# gtest_discover_tests(Matrix_Design_Test)
+gtest_discover_tests(Matrix_Design_Test)
