@@ -1,5 +1,5 @@
 #pragma once
-#include "Matrix.h"
+
 #include "Matrix_base.h"
 #include "Matrix_ref.h"
 #include "Matrix_slice.h"
@@ -18,6 +18,7 @@ template <typename T, size_t N> class Matrix;
 template <typename T> class Matrix<T, 0>;
 template <typename T> class Matrix<T, 1>;
 
+// 标量
 template <typename T> class Matrix<T, 0> {
 public:
   static constexpr size_t order = 0;
@@ -30,6 +31,7 @@ public:
   }
 
   T &operator()() { return elem; }
+  // 常量对象只能调用常量成员函数
   T &operator()() const { return elem; }
 
   operator T &() { return elem; }
@@ -40,13 +42,13 @@ public:
 private:
   T elem;
 };
-
+// 一维向量
 template <typename T> class Matrix<T, 1> {
 public:
   static constexpr size_t order = 1;
   using value_type = T;
 
-  Matrix(const T &x) : elems(x) {}
+  Matrix(const T &x) : elems(x), desc(x){}
   Matrix &operator=(const Matrix &value) { return *this; }
 
   //   T &operator()() { return elem; }
@@ -54,9 +56,17 @@ public:
 
   //   operator T &() { return elem; }
   //   operator const T &() { return elem; }
-
+  const Matrix_slice<1>& descriptor() const {
+      return desc;
+  } // the slice defining subscripting
   T &row(size_t i);
 
+  T* data() { return elems.data(); } // "flat" element access
+
+  const T* data() const { return elems.data(); }
+  
+  template <typename T1, size_t N1>
+  friend std::ostream& operator<<(std::ostream& os, const Matrix<T, 1>& m);
 private:
   Matrix_slice<1> desc;
   std::vector<T> elems;
@@ -85,16 +95,18 @@ public:
   template <typename U>
   Matrix &operator=(const Matrix_ref<U, N> &); // assign from Matrix_ref
 
-  template <typename... Exts>    // specify the extents
-  explicit Matrix(Exts... exts); // init from dims
-
   Matrix(Matrix_initializer<T, N>);            // initializer from list
   Matrix &operator=(Matrix_initializer<T, N>); // assign from list
 
+  // 可变参数模板，指定每个
+  template <typename... Exts>    // specify the extents
+  explicit Matrix(Exts... exts); // init from dims
+  
   template <typename U>
   Matrix(std::initializer_list<U>) = delete; // don't use {} except for elements
-
   template <typename U> Matrix &operator=(std::initializer_list<U>) = delete;
+  
+  
   template <typename T1, size_t N1>
   friend std::ostream &operator<<(std::ostream &os, const Matrix<T1, N1> &m);
 
@@ -193,8 +205,8 @@ Enable_if<(dim > 3), void> print_matrix(std::ostream &out,
   for (size_t i = 0; i < m.descriptor().extents[N1 - dim]; ++i) {
     std::vector<size_t> current_indexes{indexes.begin(), indexes.end()};
     current_indexes.push_back(i);
-    if(i > 0){
-      for(size_t i = 0; i < N1 - dim; i++){
+    if (i > 0) {
+      for (size_t i = 0; i < N1 - dim; i++) {
         out << " ";
       }
     }
@@ -211,19 +223,18 @@ Enable_if<(dim == 3), void> print_matrix(std::ostream &out,
   for (size_t i = 0; i < m.descriptor().extents[N1 - dim]; ++i) {
     std::vector<size_t> current_indexes{indexes.begin(), indexes.end()};
     current_indexes.push_back(i);
-    if(i > 0){
-      for(size_t i = 0; i < N1 - dim + 1; i++){
+    if (i > 0) {
+      for (size_t i = 0; i < N1 - dim + 1; i++) {
         out << " ";
       }
     }
     print_matrix<dim - 1>(out, m, current_indexes);
-    if(i < m.descriptor().extents[N1 - dim] - 1){
+    if (i < m.descriptor().extents[N1 - dim] - 1) {
       out << "," << std::endl << std::endl;
     }
   }
   out << "]";
 }
-
 
 template <size_t dim, typename T1, size_t N1>
 Enable_if<(dim == 2), void> print_matrix(std::ostream &out,
@@ -233,13 +244,13 @@ Enable_if<(dim == 2), void> print_matrix(std::ostream &out,
   for (size_t i = 0; i < m.descriptor().extents[N1 - dim]; ++i) {
     std::vector<size_t> current_indexes{indexes.begin(), indexes.end()};
     current_indexes.push_back(i);
-    if(i > 0){
-      for(size_t i = 0; i < N1 - dim + 1; i++){
+    if (i > 0) {
+      for (size_t i = 0; i < N1 - dim + 1; i++) {
         out << " ";
       }
     }
     print_matrix<dim - 1>(out, m, current_indexes);
-    if(i < m.descriptor().extents[N1 - dim] - 1){
+    if (i < m.descriptor().extents[N1 - dim] - 1) {
       out << "," << std::endl;
     }
   }
@@ -252,12 +263,8 @@ Enable_if<(dim == 1), void> print_matrix(std::ostream &out,
                                          const std::vector<size_t> indexes) {
   out << "[";
   for (size_t i = 0; i < m.descriptor().extents[N1 - dim]; ++i) {
-    std::vector<size_t> current_indexes{indexes.begin(), indexes.end()};
-    current_indexes.push_back(i);
-    size_t index =
-        std::inner_product(current_indexes.begin(), current_indexes.end(),
-                           m.descriptor().strides.begin(), size_t(0));
-    out << *(m.data() + index);
+
+    out << *(m.data() + i);
     if (i < m.descriptor().extents[N1 - dim] - 1) {
       out << ", ";
     }
