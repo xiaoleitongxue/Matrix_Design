@@ -180,7 +180,6 @@ template<typename T, size_t N>
 template<typename U>
 inline Matrix<T, N>& Matrix<T, N>::operator=(const Matrix_ref<U, N>& m_r)
 {
-	// TODO: insert return statement here
 	desc = m_r.get_matrix_desc();
 	T* first = m_r.get_first_element_ptr();
 	Matrix_impl::insert_from_m_r<T, N, std::vector<T>>(first, desc.extents, desc.strides, this->elems);
@@ -220,44 +219,21 @@ inline Matrix<T, N>& Matrix<T, N>::operator=(Matrix_initializer<T, N> list)
 template <typename T1, size_t N1>
 std::ostream& operator<<(std::ostream& os, const Matrix<T1, N1>& m) {
 
-	print_matrix<N1>(os, m, {});
+	print_matrix<N1>(os, m, 0);
 
 	return os;
 }
-template <size_t dim, typename T1, size_t N1>
-Enable_if<(dim > 3), void> print_matrix(std::ostream& out,
-	const Matrix<T1, N1>& m,
-	const std::vector<size_t> indexes) {
-	out << "[";
-	for (size_t i = 0; i < m.descriptor().extents[N1 - dim]; ++i) {
-		std::vector<size_t> current_indexes{ indexes.begin(), indexes.end() };
-		current_indexes.push_back(i);
-		if (i > 0) {
-			for (size_t i = 0; i < N1 - dim; i++) {
-				out << " ";
-			}
-		}
-		print_matrix<dim - 1>(out, m, current_indexes);
-	}
-	out << "]";
-}
+
 
 template <size_t dim, typename T1, size_t N1>
-Enable_if<(dim == 3), void> print_matrix(std::ostream& out,
+Enable_if<(dim == 1), void> print_matrix(std::ostream& out,
 	const Matrix<T1, N1>& m,
-	const std::vector<size_t> indexes) {
+	size_t offset) {
 	out << "[";
 	for (size_t i = 0; i < m.descriptor().extents[N1 - dim]; ++i) {
-		std::vector<size_t> current_indexes{ indexes.begin(), indexes.end() };
-		current_indexes.push_back(i);
-		if (i > 0) {
-			for (size_t i = 0; i < N1 - dim + 1; i++) {
-				out << " ";
-			}
-		}
-		print_matrix<dim - 1>(out, m, current_indexes);
+		out << *(m.data() + offset + i);
 		if (i < m.descriptor().extents[N1 - dim] - 1) {
-			out << "," << std::endl << std::endl;
+			out << ", ";
 		}
 	}
 	out << "]";
@@ -266,17 +242,17 @@ Enable_if<(dim == 3), void> print_matrix(std::ostream& out,
 template <size_t dim, typename T1, size_t N1>
 Enable_if<(dim == 2), void> print_matrix(std::ostream& out,
 	const Matrix<T1, N1>& m,
-	const std::vector<size_t> indexes) {
+	size_t offset) {
+
 	out << "[";
 	for (size_t i = 0; i < m.descriptor().extents[N1 - dim]; ++i) {
-		std::vector<size_t> current_indexes{ indexes.begin(), indexes.end() };
-		current_indexes.push_back(i);
 		if (i > 0) {
 			for (size_t i = 0; i < N1 - dim + 1; i++) {
 				out << " ";
 			}
 		}
-		print_matrix<dim - 1>(out, m, current_indexes);
+		size_t offset_ = offset + i * m.descriptor().strides[N1 - dim];
+		print_matrix<dim - 1>(out, m, offset_);
 		if (i < m.descriptor().extents[N1 - dim] - 1) {
 			out << "," << std::endl;
 		}
@@ -285,19 +261,43 @@ Enable_if<(dim == 2), void> print_matrix(std::ostream& out,
 }
 
 template <size_t dim, typename T1, size_t N1>
-Enable_if<(dim == 1), void> print_matrix(std::ostream& out,
+Enable_if<(dim > 2), void> print_matrix(std::ostream& out,
 	const Matrix<T1, N1>& m,
-	const std::vector<size_t> indexes) {
+	size_t offset) {
+
 	out << "[";
 	for (size_t i = 0; i < m.descriptor().extents[N1 - dim]; ++i) {
-
-		out << *(m.data() + i);
+		if (i > 0) {
+			for (size_t i = 0; i < N1 - dim + 1; i++) {
+				out << " ";
+			}
+		}
+		size_t offset_ = offset + i * m.descriptor().strides[N1 - dim];
+		print_matrix<dim - 1>(out, m, offset_);
 		if (i < m.descriptor().extents[N1 - dim] - 1) {
-			out << ", ";
+			out << "," << std::endl << std::endl;
 		}
 	}
 	out << "]";
 }
+
+//template <size_t dim, typename T1, size_t N1>
+//Enable_if<(dim > 3), void> print_matrix(std::ostream& out,
+//	const Matrix<T1, N1>& m,
+//	size_t offset) {
+//	
+//	out << "[";
+//	for (size_t i = 0; i < m.descriptor().extents[N1 - dim]; ++i) {
+//		if (i > 0) {
+//			for (size_t i = 0; i < N1 - dim; i++) {
+//				out << " ";
+//			}
+//		}
+//		size_t offset_ = offset + i * m.descriptor().strides[N1 - dim];
+//		print_matrix<dim - 1>(out, m, offset_);
+//	}
+//	out << "]";
+//}
 
 template <typename T, size_t N>
 Matrix_ref<T, N - 1> Matrix<T, N>::row(size_t n) {

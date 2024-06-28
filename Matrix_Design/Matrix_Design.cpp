@@ -34,8 +34,8 @@ int main()
 	auto row = m1.row(1);
 	Matrix<double, 2> m2(row);
 	auto m3 = Matrix<double, 2>(row);
-	std::cout << "m1" << m1 << std::endl;
-	std::cout << "m2" << m2 << std::endl;
-	std::cout << "m3" << m3 << std::endl;
+	std::cout << "m1" << std::endl << m1 << std::endl;
+	std::cout << "m2" << std::endl << m2 << std::endl;
+	std::cout << "m3" << std::endl << m3 << std::endl;
 	return 0;
 }
