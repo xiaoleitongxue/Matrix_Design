@@ -1,9 +1,0 @@
-{
-    "cmake.generator": "Ninja",
-    "clangd.arguments": [
-        "--compile-commands-dir=${workspaceFolder}/build",
-        "--background-index",
-        "--clang-tidy",
-    ],
-    "clangd.checkUpdates": true,
-}
