@@ -16,8 +16,8 @@ public:
 	~Matrix_ref() = default;
 
 	Matrix_ref(const Matrix_slice<N>& s, T* p) : desc{ s }, ptr{ p } {}
-	Matrix_slice<N> get_matrix_desc() const { return desc; }
-	T* get_first_element_ptr() const {
+	const Matrix_slice<N>& descriptor() const { return desc; }
+	T* pointer() const {
 		return ptr;
 	}
 private:

@@ -13,7 +13,7 @@
 #include <vcruntime_typeinfo.h>
 #include <vector>
 #include <assert.h>
-// decaler class prototype
+
 
 template <bool B, typename T>
 using Enable_if = typename std::enable_if<B, T>::type;
@@ -25,6 +25,9 @@ using Same = typename std::is_same<T, U>::type;
 
 
 namespace Matrix_impl {
+
+	
+	
 	// N > 1
 	template <typename T, size_t N> struct Matrix_init {
 		using type = std::initializer_list<typename Matrix_init<T, N - 1>::type>;
@@ -35,6 +38,7 @@ namespace Matrix_impl {
 	};
 	// N = 0
 	template <typename T> struct Matrix_init<T, 0>;
+
 
 	template <typename List> bool check_non_jagged(const List& list) {
 		auto i = list.begin();
@@ -109,6 +113,55 @@ namespace Matrix_impl {
 		 }
 	}
 
+	template <size_t N, typename Array>
+	std::array<size_t, N> computing_stride(const Array& extents) {
+		std::array<size_t, N> strides;
+		for (size_t i = 0; i < N; ++i) {
+			strides[i] = 1;
+		}
+		for (size_t i = 0; i < N - 1; ++i) {
+			size_t product = 1;
+			for (size_t j = i + 1; j < N; ++j) {
+				product *= extents[j];
+			}
+			strides[i] = product;
+		}
+		return strides;
+	}
 
+	template <size_t N, typename... Dims, typename Array>
+	bool check_bounds(const Array& extents, Dims... dims) {
+		size_t indexes[N]{ size_t(dims)... };
+		return std::equal(indexes, indexes + N, extents, std::less<size_t>{});
+	}
+
+	constexpr bool All() { return true; }
+
+	template <typename... Args> constexpr bool All(bool b, Args... args) {
+		return b && All(args...);
+	}
+
+	template <typename... Args> constexpr bool Requesting_element() {
+		return All(std::is_convertible<Args, size_t>()...);
+	}
+
+	constexpr bool Some() { return true; }
+
+	template <typename... Args> constexpr bool Some(bool b, Args... args) {
+		return b || All(args...);
+	}
+
+
+
+	
+
+	template <size_t N, typename Array>
+	size_t computing_size(const Array& extents) {
+		size_t size = 1;
+		for (int i = 0; i < N; ++i) {
+			size *= extents[i];
+		}
+		return size;
+	}
 
 } // namespace Matrix_impl

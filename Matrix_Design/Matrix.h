@@ -18,20 +18,27 @@ template <typename T, size_t N> class Matrix;
 template <typename T> class Matrix<T, 0>;
 template <typename T> class Matrix<T, 1>;
 
-// 标量
+
 template <typename T> class Matrix<T, 0> {
 public:
 	static constexpr size_t order = 0;
 	using value_type = T;
 
-	Matrix(const T& x) : elem(x) {}
+	Matrix<T, 0>() = default;
+
+	Matrix<T, 0>(Matrix<T, 0>&) = default;
+	Matrix<T, 0>& operator=(Matrix<T, 0>&) = default;
+	Matrix<T, 0>(Matrix<T, 0>&&) = default;
+	Matrix<T, 0>& operator=(Matrix<T, 0>&&) = default;
+
+	Matrix(const T& value) : elem(value) {}
 	Matrix& operator=(const T& value) {
 		elem = value;
 		return *this;
 	}
 
 	T& operator()() { return elem; }
-	// 常量对象只能调用常量成员函数
+
 	T& operator()() const { return elem; }
 
 	operator T& () { return elem; }
@@ -42,24 +49,40 @@ public:
 private:
 	T elem;
 };
-// 一维向量
+
 template <typename T> class Matrix<T, 1> {
 public:
 	static constexpr size_t order = 1;
 	using value_type = T;
 
-	Matrix(const T& x) : desc(x), elems(x) {}
-	Matrix& operator=(const Matrix& value) { return *this; }
+	Matrix() = default;                         // default constructor
+	Matrix(Matrix&&) = default;                 // move constructor
+	Matrix& operator=(Matrix&&) = default;      // move assignment
+	Matrix(Matrix const&) = default;            // copy constructor
+	Matrix& operator=(Matrix const&) = default; // copy assignment
+	~Matrix() = default;
 
-	//   T &operator()() { return elem; }
-	//   T &operator()() const { return elem; }
 
-	//   operator T &() { return elem; }
-	//   operator const T &() { return elem; }
+	// constructor
+	Matrix(const T&);
+
+	Matrix(Matrix_initializer<T, 1>);   // initializer from list
+	Matrix& operator=(Matrix_initializer<T, 1>); // assign from list
+
+	template <typename U>
+	Matrix(Matrix_ref<U, 1> const&); // construct from Matrix_ref
+	template <typename U>
+	Matrix<T, 1>& operator=(Matrix_ref<U, 1> const&); // assign from Matrix_ref
+
+	T& operator()(size_t i) {
+		return elems[i];
+	}
+
 	const Matrix_slice<1>& descriptor() const {
 		return desc;
-	} // the slice defining subscripting
-	T& row(size_t i);
+	}
+
+	T& row(size_t i) = delete;
 
 	T* data() { return elems.data(); } // "flat" element access
 
@@ -72,16 +95,39 @@ private:
 	std::vector<T> elems;
 };
 
+
+template<typename T>
+Matrix<T, 1>::Matrix(const T& n) :desc(1), elems(n) {
+
+}
+
+template <typename T>
+template <typename U>
+Matrix<T, 1>::Matrix(Matrix_ref<U, 1> const& m_r) :desc{ m_r.descriptor() } {
+	T* first = m_r.pointer() + desc.start;
+	Matrix_impl::insert_from_m_r<T, 1>(first, desc.extents, desc.strides, elems);
+}
+
+template <typename T>
+template <typename U>
+Matrix<T, 1>& Matrix<T, 1>::operator=(Matrix_ref<U, 1> const& m_r) {
+	desc = m_r.descriptor();
+	T* first = m_r.pointer() + desc.start;
+	Matrix_impl::insert_from_m_r<T, 1>(first, desc.extents, desc.strides, elems);
+	return *this;
+}
+
+
 template <typename T, size_t N> class Matrix : public Matrix_base<T, N> {
 	// special to matrix
 public:
 	static constexpr size_t order = N; // dimensions
-	Matrix() = default;
-	Matrix(Matrix&&) = default;                 // move constructor
-	Matrix& operator=(Matrix&&) = default;      // move assignment
-	Matrix(Matrix const&) = default;            // copy constructor
-	Matrix& operator=(Matrix const&) = default; // copy assignment
-	~Matrix() = default;
+	Matrix<T, N>() = default;
+	Matrix<T, N>(Matrix&&) = default;                 // move constructor
+	Matrix<T, N>& operator=(Matrix&&) = default;      // move assignment
+	Matrix<T, N>(Matrix const&) = default;            // copy constructor
+	Matrix<T, N>& operator=(Matrix const&) = default; // copy assignment
+	~Matrix<T, N>() = default;
 
 	static constexpr size_t get_order() { return N; } // number of dimensions
 
@@ -90,19 +136,19 @@ public:
 	} // # elements in the nth dimension
 
 	template <typename U>
-	Matrix(const Matrix_ref<U, N>&); // construct from Matrix_ref
+	Matrix<T, N>(const Matrix_ref<U, N>&); // construct from Matrix_ref
 	template <typename U>
 	Matrix<T, N>& operator=(const Matrix_ref<U, N>&); // assign from Matrix_ref
 
-	Matrix(Matrix_initializer<T, N>);            // initializer from list
+	Matrix<T, N>(Matrix_initializer<T, N>);            // initializer from list
 	Matrix<T, N>& operator=(Matrix_initializer<T, N>); // assign from list
 
-	// 可变参数模板，指定每个
+
 	template <typename... Exts>    // specify the extents
-	explicit Matrix(Exts... exts); // init from dims
+	Matrix<T, N>(Exts... exts); // init from dims
 
 	template <typename U>
-	Matrix(std::initializer_list<U>) = delete; // don't use {} except for elements
+	Matrix<T, N>(std::initializer_list<U>) = delete; // don't use {} except for elements
 	template <typename U> Matrix& operator=(std::initializer_list<U>) = delete;
 
 
@@ -131,10 +177,10 @@ public:
 	Matrix_ref<const T, N - 1> col(size_t n) const;
 
 	template <typename... Args>
-	Enable_if<Requesting_element<Args...>(), T&> operator()(Args... args);
+	Enable_if<Matrix_impl::Requesting_element<Args...>(), T&> operator()(Args... args);
 
 	template <typename... Args>
-	Enable_if<Requesting_element<Args...>(), T&> operator()(Args... args) const;
+	Enable_if<Matrix_impl::Requesting_element<Args...>(), T&> operator()(Args... args) const;
 
 	template <typename... Args>
 	Enable_if<Requesting_slice<Args...>(), Matrix_ref<T, N>>
@@ -145,20 +191,10 @@ public:
 		operator()(const Args &...args) const;
 
 	int rows() {
-		/*int rs = 1;
-		if (N == 1) {
-			return 1;
-		}
-
-		for (size_t i = 1; i < N; ++i) {
-			rs *= desc.extents[i];
-		}
-		return rs;*/
 		return desc.extents[0];
 	}
 
-	int cols() { 
-		/*return desc.extents[desc.extents.size() - 1]; */
+	int cols() {
 		return desc.extents[1];
 	}
 
@@ -167,12 +203,14 @@ private:
 	std::vector<T> elems;
 };
 
+
+
 template<typename T, size_t N>
 template<typename U>
 inline Matrix<T, N>::Matrix(const Matrix_ref<U, N>& m_r)
 {
-	desc = m_r.get_matrix_desc();
-	T* first = m_r.get_first_element_ptr();
+	desc = m_r.descriptor();
+	T* first = m_r.pointer() + desc.start;
 	Matrix_impl::insert_from_m_r<T, N>(first, desc.extents, desc.strides, elems);
 }
 
@@ -181,7 +219,7 @@ template<typename U>
 inline Matrix<T, N>& Matrix<T, N>::operator=(const Matrix_ref<U, N>& m_r)
 {
 	desc = m_r.get_matrix_desc();
-	T* first = m_r.get_first_element_ptr();
+	T* first = m_r.get_first_element_ptr() + desc.start;
 	Matrix_impl::insert_from_m_r<T, N, std::vector<T>>(first, desc.extents, desc.strides, this->elems);
 	return *this;
 }
@@ -191,14 +229,40 @@ template <typename... Exts>
 inline Matrix<T, N>::Matrix(Exts... exts)
 	: desc{ size_t(exts)... }, elems(desc.size) {}
 
-template <typename T, size_t N>
-Matrix<T, N>::Matrix(Matrix_initializer<T, N> list) {
-	std::array<size_t, N> extents = Matrix_impl::derive_extents<N>(list);
-	std::array<size_t, N> strides = computing_stride<N>(extents);
+
+template <typename T>
+Matrix<T, 1>::Matrix(Matrix_initializer<T, 1> list) {
+	std::array<size_t, 1> extents = Matrix_impl::derive_extents<1>(list);
+	std::array<size_t, 1> strides = Matrix_impl::computing_stride<1>(extents);
 	desc.start = 0;
 	desc.extents = extents;
 	desc.strides = strides;
-	desc.size = computing_size<N>(extents);
+	desc.size = Matrix_impl::computing_size<1>(extents);
+	Matrix_impl::insert_flat(list, this->elems);
+}
+template <typename T>
+Matrix<T, 1>& Matrix<T, 1>::operator=(Matrix_initializer<T, 1> list) {
+	std::array<size_t, 1> extents = Matrix_impl::derive_extents<1>(list);
+	std::array<size_t, 1> strides = Matrix_impl::computing_stride<1>(extents);
+	desc.start = 0;
+	desc.extents = extents;
+	desc.strides = strides;
+	desc.size = Matrix_impl::computing_size<1>(extents);
+	Matrix_impl::insert_flat(list, this->elems);
+	return *this;
+}
+
+
+
+
+template <typename T, size_t N>
+Matrix<T, N>::Matrix(Matrix_initializer<T, N> list) {
+	std::array<size_t, N> extents = Matrix_impl::derive_extents<N>(list);
+	std::array<size_t, N> strides = Matrix_impl::computing_stride<N>(extents);
+	desc.start = 0;
+	desc.extents = extents;
+	desc.strides = strides;
+	desc.size = Matrix_impl::computing_size<N>(extents);
 	Matrix_impl::insert_flat(list, this->elems);
 }
 
@@ -281,23 +345,7 @@ Enable_if<(dim > 2), void> print_matrix(std::ostream& out,
 	out << "]";
 }
 
-//template <size_t dim, typename T1, size_t N1>
-//Enable_if<(dim > 3), void> print_matrix(std::ostream& out,
-//	const Matrix<T1, N1>& m,
-//	size_t offset) {
-//	
-//	out << "[";
-//	for (size_t i = 0; i < m.descriptor().extents[N1 - dim]; ++i) {
-//		if (i > 0) {
-//			for (size_t i = 0; i < N1 - dim; i++) {
-//				out << " ";
-//			}
-//		}
-//		size_t offset_ = offset + i * m.descriptor().strides[N1 - dim];
-//		print_matrix<dim - 1>(out, m, offset_);
-//	}
-//	out << "]";
-//}
+
 
 template <typename T, size_t N>
 Matrix_ref<T, N - 1> Matrix<T, N>::row(size_t n) {
@@ -307,7 +355,16 @@ Matrix_ref<T, N - 1> Matrix<T, N>::row(size_t n) {
 	return { row, data() };
 }
 
-template <typename T> T& Matrix<T, 1>::row(size_t i) { return &elems[i]; }
+template<typename T, size_t N>
+inline Matrix_ref<const T, N - 1> Matrix<T, N>::row(size_t n) const
+{
+	assert(n < rows());
+	Matrix_slice<N - 1> row;
+	slice_dim<0, T, N>(n, desc, row);
+	return { row, data() };
+}
+
+
 
 template <typename T, size_t N>
 Matrix_ref<T, N - 1> Matrix<T, N>::col(size_t n) {
@@ -317,10 +374,27 @@ Matrix_ref<T, N - 1> Matrix<T, N>::col(size_t n) {
 	return { col, data() };
 }
 
+template<typename T, size_t N>
+inline Matrix_ref<const T, N - 1> Matrix<T, N>::col(size_t n) const
+{
+	assert(n < cols());
+	Matrix_slice<N - 1> col;
+	slice_dim<1>(n, desc, col);
+	return { col, data() };
+}
+
 template <typename T, size_t N>
 template <typename... Args>
-Enable_if<Requesting_element<Args...>(), T&>
+Enable_if<Matrix_impl::Requesting_element<Args...>(), T&>
 Matrix<T, N>::operator()(Args... args) {
+	assert(check_bounds(desc, args...));
+	return *(data() + desc(args...));
+}
+
+template<typename T, size_t N>
+template<typename ...Args>
+inline Enable_if<Matrix_impl::Requesting_element<Args...>(), T&> Matrix<T, N>::operator()(Args ...args) const
+{
 	assert(check_bounds(desc, args...));
 	return *(data() + desc(args...));
 }
