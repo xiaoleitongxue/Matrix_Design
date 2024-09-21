@@ -3,7 +3,7 @@
 
 #include "Matrix_Design.h"
 #include <iostream>
-
+#include "Matrix.h"
 
 int main()
 {

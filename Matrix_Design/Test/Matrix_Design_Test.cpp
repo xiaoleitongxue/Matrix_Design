@@ -1,14 +1,11 @@
-#include <climits>
-#include <concepts>
-#include <cstdint>
+
 #include <gtest/gtest.h>
 #include <iostream>
-#include <type_traits>
-#include <utility>
+
 
 #include "../Matrix_Design.h"
-#include <algorithm>
-#include <vector>
+
+#include "../Matrix.h"
 
 template <typename T, size_t N>
 bool CompareArrays(const std::array<T, N> arr1, const std::array<T, N> arr2,
@@ -122,5 +119,9 @@ TEST(Matrix_design_test, test_10) {
 	std::cout << m3 << std::endl;
 	std::cout << m3.rows() << std::endl;
 	std::cout << m3.cols() << std::endl;
+
+	const auto m3_row_ref = m3.row(1);
+	const auto m3_row = Matrix<double, 2>(m3_row_ref);
+	std::cout << m3_row << std::endl;
 }
 
