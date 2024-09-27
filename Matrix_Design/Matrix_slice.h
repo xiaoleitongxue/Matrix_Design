@@ -13,10 +13,9 @@ template <size_t N> struct Matrix_slice;
 
 struct Slice {
   size_t i;
-  size_t j;
-  Slice(size_t i_, size_t j_) : i(i_), j(j_) {}
-
-  Slice(size_t i_) : i(i_) {}
+  size_t j{};
+  Slice(const size_t i_, const size_t j_) : i(i_), j(j_) {}
+  explicit Slice(const size_t i_) : i(i_) {}
 };
 
 template <size_t N> struct Matrix_slice {
@@ -26,11 +25,12 @@ template <size_t N> struct Matrix_slice {
   Matrix_slice(Matrix_slice &&) = default;
   Matrix_slice &operator=(Matrix_slice &&) = default;
 
-  Matrix_slice(size_t s, std::initializer_list<size_t> exts); // extents
-  Matrix_slice(size_t s, std::initializer_list<size_t> exts,
-               std::initializer_list<size_t> strs);
+  Matrix_slice(size_t start, std::initializer_list<size_t> extents); // extents
+  Matrix_slice(size_t start, std::initializer_list<size_t> extents,
+               std::initializer_list<size_t> strides);
 
-  template <typename... Dims> Matrix_slice(Dims... dims); // N extents
+  template <typename... Dims>
+  explicit Matrix_slice(Dims... dims); // N extents
 
   template <
       typename... Dims,
@@ -38,8 +38,8 @@ template <size_t N> struct Matrix_slice {
           All(std::is_convertible<Dims, size_t>()...)>> // calculate index from
                                                         // a set of subscripts
   size_t operator()(Dims... dims) const;
-  size_t size;                   // total number of elements
-  size_t start;                  // starting offset
+  size_t size{};                   // total number of elements
+  size_t start{};                  // starting offset
   std::array<size_t, N> extents; // number of elemens in each dimension
   std::array<size_t, N> strides; // offsets between elements in each dimension
 };
@@ -47,26 +47,26 @@ template <size_t N> struct Matrix_slice {
 template <size_t N>
 template <typename... Dims>
 inline Matrix_slice<N>::Matrix_slice(Dims... dims)
-    : extents{size_t(dims)...}, strides{N} {
-  static_assert(sizeof...(Dims) == N, "");
+    : extents{static_cast<size_t>(dims)...}, strides{N} {
+  static_assert(sizeof...(Dims) == N, "Dims must be N");
   size = (dims * ...);
   strides = Matrix_impl::computing_stride<N>(extents);
-  start = size_t(0);
+  start = static_cast<size_t>(0);
 }
 
 template <size_t N>
 template <typename... Dims, typename>
 inline size_t Matrix_slice<N>::operator()(Dims... dims) const {
   static_assert(sizeof...(Dims) == N, "Number of params must be N");
-  size_t args[N]{size_t(dims)...}; // copy arguments into an array
-  return std::inner_product(args, args + N, strides.begin(), size_t(0));
+  size_t args[N]{static_cast<size_t>(dims)...}; // copy arguments into an array
+  return std::inner_product(args, args + N, strides.begin(), static_cast<size_t>(0));
 }
 
 template <size_t N>
-inline Matrix_slice<N>::Matrix_slice(size_t s,
-                                     std::initializer_list<size_t> exts)
-    : extents{exts}, start{s} {
-  static_assert(exts.size() == N, "");
+inline Matrix_slice<N>::Matrix_slice(const size_t start,
+                                     std::initializer_list<size_t> extents)
+    : start{start}, extents{extents} {
+  static_assert(extents.size() == N, "Dims must be N");
 
   size = Matrix_impl::computing_size<N>(extents);
 
@@ -74,12 +74,12 @@ inline Matrix_slice<N>::Matrix_slice(size_t s,
 }
 
 template <size_t N>
-inline Matrix_slice<N>::Matrix_slice(size_t s,
-                                     std::initializer_list<size_t> exts,
-                                     std::initializer_list<size_t> strs)
-    : extents{exts}, strides{strs}, start{s} {
-  static_assert(exts.size() == N, "");
-  static_assert(strides.size() == N, "");
+inline Matrix_slice<N>::Matrix_slice(const size_t start,
+                                     std::initializer_list<size_t> extents,
+                                     std::initializer_list<size_t> strides)
+    : start{start}, extents{extents}, strides{strides} {
+  static_assert(extents.size() == N, "Extents size must be N");
+  static_assert(strides.size() == N, "Extents size must be N");
 }
 
 template <typename... Args> constexpr bool Requesting_slice() {
@@ -92,11 +92,11 @@ size_t do_slice_dim(const Matrix_slice<N> &os, Matrix_slice<N> &ns,
                     const T &s) {
   size_t i = 0;
   size_t j = 0;
-  if (std::is_same<T, size_t>()) {
+  if constexpr (std::is_same<T, size_t>()) {
     i = s;
-    j = i + 1;
-  } else if (std::is_same<T, Slice>()) {
-    Slice s_ = static_cast<Slice>(s);
+    j = N;
+  } else if constexpr (std::is_same<T, Slice>()) {
+    const auto s_ = static_cast<Slice>(s);
     i = s_.i;
     j = s_.j;
   }
