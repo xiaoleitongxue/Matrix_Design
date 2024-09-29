@@ -167,7 +167,8 @@ TEST(MATRIX_DESIGN_TEST, matrix_slice_test_0)
     EXPECT_TRUE(CompareArrays(m1.descriptor().extents, expected_extents, 3));
     EXPECT_TRUE(CompareArrays(m1.descriptor().strides, expected_strides, 3));
 
-
     std::cout << m1 << std::endl;
 }
+
+
 

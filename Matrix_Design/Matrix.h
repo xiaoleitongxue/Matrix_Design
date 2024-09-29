@@ -151,9 +151,11 @@ public:
 
     template<typename... Extents> // specify the extents
     explicit Matrix(Extents... extents); // init from dims
-
+    // disable init Matrix from std::initializer_list<T> or std::initializer_list<std::initializer_list<D>>
+    // because Matrix<T, N>, where N > 2, can only be init from 3D std::initializer_list.
+    // std::initializer_list<U> match type std::initializer_list<U> and std::initializer_list<std::initializer_list<D>>
     template<typename U>
-    Matrix(std::initializer_list<U>) = delete; // don't use {} except for elements
+    Matrix(std::initializer_list<U>) = delete;
     template<typename U>
     Matrix &operator=(std::initializer_list<U>) = delete;
 
