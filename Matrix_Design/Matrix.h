@@ -27,6 +27,7 @@ class Matrix<T, 0> {
 public:
     static constexpr size_t order = 0;
     using value_type = T;
+
     Matrix() = default; // constructor
 
     Matrix(const Matrix &) = default; // copy constructor
@@ -74,6 +75,7 @@ public:
 
     // constructor
     explicit Matrix(const T &);
+
     explicit Matrix(Matrix_initializer<T, 1>); // initializer from list
     Matrix &operator=(Matrix_initializer<T, 1>); // assign from list
 
@@ -86,7 +88,9 @@ public:
 
 
     T &row(size_t i) = delete;
+
     T &column(size_t j) = delete;
+
     T *data() { return elems.data(); } // "flat" element access
 
     const T *data() const { return elems.data(); }
@@ -156,6 +160,7 @@ public:
     // std::initializer_list<U> match type std::initializer_list<U> and std::initializer_list<std::initializer_list<D>>
     template<typename U>
     Matrix(std::initializer_list<U>) = delete;
+
     template<typename U>
     Matrix &operator=(std::initializer_list<U>) = delete;
 
