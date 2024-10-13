@@ -1,6 +1,6 @@
 #pragma once
-#include "Matrix_base.h"
-#include "Matrix_slice.h"
+#include "matrix_base.h"
+#include "matrix_slice.h"
 
 template <typename T, size_t N>
 class Matrix_ref;

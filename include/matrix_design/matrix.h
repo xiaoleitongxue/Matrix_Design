@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Matrix_base.h"
-#include "Matrix_ref.h"
-#include "Matrix_slice.h"
+#include "matrix_base.h"
+#include "matrix_ref.h"
+#include "matrix_slice.h"
 #include "common.h"
 #include <array>
 #include <initializer_list>
@@ -97,7 +97,9 @@ public:
 
     template<typename T1, size_t N1>
     friend std::ostream &operator<<(std::ostream &os, const Matrix<T, 1> &m);
-
+    [[nodiscard]] const Matrix_slice<1> &descriptor() const {
+        return desc;
+    } // the slice defining subscripting
 private:
     Matrix_slice<1> desc;
     std::vector<T> elems;

@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 #include <iostream>
 
-#include "../Matrix.h"
+#include "matrix_design/matrix.h"
 
 template <typename T, size_t N>
 bool CompareArrays(const std::array<T, N> arr1, const std::array<T, N> arr2,
