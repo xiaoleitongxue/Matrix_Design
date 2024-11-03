@@ -1,0 +1,8 @@
+---
+Checks: '-*,modernize-*,bugprone-*,performance-*'
+WarningsAsErrors: 'modernize-*'
+HeaderFilterRegex: './.*'
+FormatStyle: 'google'
+ExtraArgs: ['-std=c++20']
+...
+

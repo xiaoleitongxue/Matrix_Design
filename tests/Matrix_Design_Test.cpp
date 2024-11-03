@@ -1,12 +1,11 @@
 
 #include <gtest/gtest.h>
 #include <iostream>
-
 #include "matrix_design/matrix.h"
 
-template <typename T, size_t N>
-bool CompareArrays(const std::array<T, N> arr1, const std::array<T, N> arr2,
-                   int size)
+template <typename T, std::size_t N>
+auto CompareArrays(const std::array<T, N> arr1, const std::array<T, N> arr2,
+                   int size) -> bool
 {
     for (int i = 0; i < size; ++i)
     {
@@ -26,7 +25,7 @@ TEST(Matrix_design_test, test_1)
 {
     Matrix<int, 0> m0(100);
     EXPECT_EQ(m0.order, 0);
-    std::cout << m0() << std::endl;
+    std::cout << m0() << '\n';
 }
 
 TEST(Matrix_design_test, test_2)
@@ -35,14 +34,14 @@ TEST(Matrix_design_test, test_2)
     auto m2 = Matrix<int, 1>(3);
     EXPECT_EQ(m1.order, 1);
     EXPECT_EQ(m2.order, 1);
-    std::cout << m1 << std::endl;
-    std::cout << m2 << std::endl;
+    std::cout << m1 << '\n';
+    std::cout << m2 << '\n';
 }
 
 TEST(Matrix_design_test, test_3)
 {
     Matrix<int, 1> m1{1, 2, 3};
-    std::cout << m1 << std::endl;
+    std::cout << m1 << '\n';
 }
 
 // TEST(Matrix_design_test, test_4) {
@@ -79,11 +78,11 @@ TEST(Matrix_design_test, test_9)
     Matrix<int, 2> m2(3, 4);
     EXPECT_EQ(m2.descriptor().size, 12);
     EXPECT_EQ(m2.descriptor().start, 0);
-    std::array<size_t, 2> expected_extents{3, 4};
-    std::array<size_t, 2> expected_strides{4, 1};
+    std::array<std::size_t, 2> expected_extents{3, 4};
+    std::array<std::size_t, 2> expected_strides{4, 1};
     EXPECT_TRUE(CompareArrays(m2.descriptor().extents, expected_extents, 2));
     EXPECT_TRUE(CompareArrays(m2.descriptor().strides, expected_strides, 2));
-    std::cout << m2 << std::endl;
+    std::cout << m2 << '\n';
 }
 
 TEST(Matrix_design_test, test_10)
@@ -115,17 +114,17 @@ TEST(Matrix_design_test, test_10)
 
     EXPECT_EQ(m3.descriptor().size, 60);
     EXPECT_EQ(m3.descriptor().start, 0);
-    std::array<size_t, 3> expected_extents{4, 5, 3};
-    std::array<size_t, 3> expected_strides{15, 3, 1};
+    std::array<std::size_t, 3> expected_extents{4, 5, 3};
+    std::array<std::size_t, 3> expected_strides{15, 3, 1};
     EXPECT_TRUE(CompareArrays(m3.descriptor().extents, expected_extents, 3));
     EXPECT_TRUE(CompareArrays(m3.descriptor().strides, expected_strides, 3));
-    std::cout << m3 << std::endl;
-    std::cout << m3.rows() << std::endl;
-    std::cout << m3.cols() << std::endl;
+    std::cout << m3 << '\n';
+    std::cout << m3.rows() << '\n';
+    std::cout << m3.cols() << '\n';
 
     const auto m3_row_ref = m3.row(1);
     const auto m3_row = Matrix<double, 2>(m3_row_ref);
-    std::cout << m3_row << std::endl;
+    std::cout << m3_row << '\n';
 }
 
 TEST(MATRIX_DESIGN_TEST, matrix_slice_test_0)
@@ -154,20 +153,20 @@ TEST(MATRIX_DESIGN_TEST, matrix_slice_test_0)
                          {1.6060, -0.0159, -1.4242},
                          {-0.1424, 0.4836, 0.3930}}};
 
-    std::cout << m << std::endl;
+    std::cout << m << '\n';
     auto elem = m(1, 1, 1);
-    std::cout << elem << std::endl;
+    std::cout << elem << '\n';
     auto m1_ref = m(Slice(0, 2), Slice(1, 3), Slice(0, 2));
     auto m1 = Matrix<double, 3>(m1_ref);
 
     EXPECT_EQ(m1.descriptor().size, 8);
     EXPECT_EQ(m1.descriptor().start, 0);
-    std::array<size_t, 3> expected_extents{2, 2,2};
-    std::array<size_t, 3> expected_strides{4, 2, 1};
+    std::array<std::size_t, 3> expected_extents{2, 2,2};
+    std::array<std::size_t, 3> expected_strides{4, 2, 1};
     EXPECT_TRUE(CompareArrays(m1.descriptor().extents, expected_extents, 3));
     EXPECT_TRUE(CompareArrays(m1.descriptor().strides, expected_strides, 3));
 
-    std::cout << m1 << std::endl;
+    std::cout << m1 << '\n';
 }
 
 

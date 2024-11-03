@@ -4,10 +4,10 @@
 #include "matrix_design/matrix.h"
 #include <iostream>
 
-int main()
+auto main() -> int
 {
-    std::cout << "Hello CMake." << std::endl;
-    Matrix<double, 3> m1{{{-0.6942, -0.0651, 0.2575},
+    std::cout << "Hello CMake." << '\n';
+    Matrix<double, 3> mat1{{{-0.6942, -0.0651, 0.2575},
                           {-0.4983, -0.9691, 1.1729},
                           {-1.2666, 2.3170, 0.0084},
                           {0.7394, 0.1116, -1.3078},
@@ -30,12 +30,12 @@ int main()
                           {-0.8664, -0.3545, 1.5108},
                           {1.6060, -0.0159, -1.4242},
                           {-0.1424, 0.4836, 0.3930}}};
-    auto row = m1.row(1);
-    Matrix<double, 2> m2(row);
-    auto m3 = Matrix<double, 2>(row);
+    auto row = mat1.row(1);
+    Matrix<double, 2> mat2(row);
+    auto mat3 = Matrix<double, 2>(row);
 
-    std::cout << "m1" << std::endl << m1 << std::endl;
-    std::cout << "m2" << std::endl << m2 << std::endl;
-    std::cout << "m3" << std::endl << m3 << std::endl;
+    std::cout << "m1" << '\n' << mat1 << '\n';
+    std::cout << "m2" << '\n' << mat2 << '\n';
+    std::cout << "m3" << '\n' << mat3 << '\n';
     return 0;
 }
