@@ -12,7 +12,7 @@
 #include <cassert>
 
 template <typename T, size_t N>
-using Matrix_initializer = typename Matrix_impl::Matrix_init<T, N>::type;
+using Matrix_initializer = typename matrix_impl::Matrix_init<T, N>::type;
 
 template <typename T, size_t N>
 class Matrix;
@@ -116,7 +116,7 @@ template <typename U>
 Matrix<T, 1>::Matrix(Matrix_ref<U, 1> const& m_r) : desc{m_r.descriptor()}
 {
     T* first = m_r.pointer() + desc.start;
-    Matrix_impl::insert_from_m_r<T, 1>(first, desc.extents, desc.strides,
+    matrix_impl::insert_from_m_r<T, 1>(first, desc.extents, desc.strides,
                                        elems);
 }
 
@@ -126,7 +126,7 @@ Matrix<T, 1>& Matrix<T, 1>::operator=(Matrix_ref<U, 1> const& m_r)
 {
     desc = m_r.descriptor();
     T* first = m_r.pointer() + desc.start;
-    Matrix_impl::insert_from_m_r<T, 1>(first, desc.extents, desc.strides,
+    matrix_impl::insert_from_m_r<T, 1>(first, desc.extents, desc.strides,
                                        elems);
     return *this;
 }
@@ -202,11 +202,11 @@ public:
     Matrix_ref<const T, N - 1> col(size_t n) const;
 
     template <typename... Args>
-    Enable_if<Matrix_impl::Requesting_element<Args...>(), T&>
+    Enable_if<matrix_impl::Requesting_element<Args...>(), T&>
     operator()(Args... args);
 
     template <typename... Args>
-    Enable_if<Matrix_impl::Requesting_element<Args...>(), T&>
+    Enable_if<matrix_impl::Requesting_element<Args...>(), T&>
     operator()(Args... args) const;
 
     template <typename... Args>
@@ -232,9 +232,9 @@ Matrix<T, N>::Matrix(const Matrix_ref<U, N>& m_r)
 {
     desc = m_r.descriptor();
     T* first = m_r.pointer() + desc.start;
-    Matrix_impl::insert_from_m_r<T, N>(first, desc.extents, desc.strides,
+    matrix_impl::insert_from_m_r<T, N>(first, desc.extents, desc.strides,
                                        elems);
-    desc.strides = Matrix_impl::computing_stride<N>(desc.extents);
+    desc.strides = matrix_impl::computing_stride<N>(desc.extents);
     desc.start = 0;
 }
 
@@ -244,9 +244,9 @@ Matrix<T, N>& Matrix<T, N>::operator=(const Matrix_ref<U, N>& m_r)
 {
     desc = m_r.get_matrix_desc();
     T* first = m_r.get_first_element_ptr() + desc.start;
-    Matrix_impl::insert_from_m_r<T, N, std::vector<T>>(
+    matrix_impl::insert_from_m_r<T, N, std::vector<T>>(
         first, desc.extents, desc.strides, this->elems);
-    desc.strides = Matrix_impl::computing_stride<N>(desc.extents);
+    desc.strides = matrix_impl::computing_stride<N>(desc.extents);
     desc.start = 0;
     return *this;
 }
@@ -261,51 +261,51 @@ Matrix<T, N>::Matrix(Extents... extents)
 template <typename T>
 Matrix<T, 1>::Matrix(Matrix_initializer<T, 1> list)
 {
-    std::array<size_t, 1> extents = Matrix_impl::derive_extents<1>(list);
-    std::array<size_t, 1> strides = Matrix_impl::computing_stride<1>(extents);
+    std::array<size_t, 1> extents = matrix_impl::derive_extents<1>(list);
+    std::array<size_t, 1> strides = matrix_impl::computing_stride<1>(extents);
     desc.start = 0;
     desc.extents = extents;
     desc.strides = strides;
-    desc.size = Matrix_impl::computing_size<1>(extents);
-    Matrix_impl::insert_flat(list, this->elems);
+    desc.size = matrix_impl::computing_size<1>(extents);
+    matrix_impl::insert_flat(list, this->elems);
 }
 
 template <typename T>
 Matrix<T, 1>& Matrix<T, 1>::operator=(Matrix_initializer<T, 1> list)
 {
-    std::array<size_t, 1> extents = Matrix_impl::derive_extents<1>(list);
-    std::array<size_t, 1> strides = Matrix_impl::computing_stride<1>(extents);
+    std::array<size_t, 1> extents = matrix_impl::derive_extents<1>(list);
+    std::array<size_t, 1> strides = matrix_impl::computing_stride<1>(extents);
     desc.start = 0;
     desc.extents = extents;
     desc.strides = strides;
-    desc.size = Matrix_impl::computing_size<1>(extents);
-    Matrix_impl::insert_flat(list, this->elems);
+    desc.size = matrix_impl::computing_size<1>(extents);
+    matrix_impl::insert_flat(list, this->elems);
     return *this;
 }
 
 template <typename T, size_t N>
 Matrix<T, N>::Matrix(Matrix_initializer<T, N> list)
 {
-    std::array<size_t, N> extents = Matrix_impl::derive_extents<N>(list);
-    std::array<size_t, N> strides = Matrix_impl::computing_stride<N>(extents);
+    std::array<size_t, N> extents = matrix_impl::derive_extents<N>(list);
+    std::array<size_t, N> strides = matrix_impl::computing_stride<N>(extents);
     desc.start = 0;
     desc.extents = extents;
     desc.strides = strides;
-    desc.size = Matrix_impl::computing_size<N>(extents);
-    Matrix_impl::insert_flat(list, this->elems);
+    desc.size = matrix_impl::computing_size<N>(extents);
+    matrix_impl::insert_flat(list, this->elems);
 }
 
 template <typename T, size_t N>
 inline Matrix<T, N>& Matrix<T, N>::operator=(Matrix_initializer<T, N> list)
 {
     // TODO: insert return statement here
-    std::array<size_t, N> extents = Matrix_impl::derive_extents<N>(list);
+    std::array<size_t, N> extents = matrix_impl::derive_extents<N>(list);
     std::array<size_t, N> strides = computing_stride<N>(extents);
     desc.start = 0;
     desc.extents = extents;
     desc.strides = strides;
     desc.size = computing_size<N>(extents);
-    Matrix_impl::insert_flat(list, this->elems);
+    matrix_impl::insert_flat(list, this->elems);
     return *this;
 }
 
@@ -418,16 +418,16 @@ inline Matrix_ref<const T, N - 1> Matrix<T, N>::col(size_t n) const
 
 template <typename T, size_t N>
 template <typename... Args>
-Enable_if<Matrix_impl::Requesting_element<Args...>(), T&>
+Enable_if<matrix_impl::Requesting_element<Args...>(), T&>
 Matrix<T, N>::operator()(Args... args)
 {
-    assert(Matrix_impl::check_bounds<N>(desc.extents, args...));
+    assert(matrix_impl::check_bounds<N>(desc.extents, args...));
     return *(data() + desc(args...));
 }
 
 template <typename T, size_t N>
 template <typename... Args>
-inline Enable_if<Matrix_impl::Requesting_element<Args...>(), T&>
+inline Enable_if<matrix_impl::Requesting_element<Args...>(), T&>
 Matrix<T, N>::operator()(Args... args) const
 {
     assert(check_bounds(desc, args...));
@@ -441,7 +441,7 @@ Matrix<T, N>::operator()(const Args&... args)
 {
     Matrix_slice<N> d;
     d.start = do_slice(desc, d, args...);
-    d.size = Matrix_impl::computing_size<N>(d.extents);
+    d.size = matrix_impl::computing_size<N>(d.extents);
     return {d, this->data()};
 }
 
@@ -452,6 +452,6 @@ Matrix<T, N>::operator()(const Args&... args) const
 {
     Matrix_slice<N> d;
     d.start = do_slice(desc, d, args...);
-    d.size = Matrix_impl::computing_size<N>(d.extents);
+    d.size = matrix_impl::computing_size<N>(d.extents);
     return {d, this->data()};
 }

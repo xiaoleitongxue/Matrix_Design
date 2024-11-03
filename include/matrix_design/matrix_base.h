@@ -1,10 +1,11 @@
 #pragma once
 
 #include <vector>
-template <typename T, size_t N>
+template <typename T, std::size_t N>
 class Matrix_base;
-template <typename T, size_t N>
-class Matrix_base {
+template <typename T, std::size_t N>
+class Matrix_base
+{
     // common stuff
 public:
     using value_type = T;

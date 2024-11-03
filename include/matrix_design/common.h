@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <cstddef>
+#include <functional>
 #include <initializer_list>
 
 #include <type_traits>
@@ -16,7 +17,7 @@ using Convertible = typename std::is_convertible<From, To>::type;
 template <typename T, typename U>
 using Same = typename std::is_same<T, U>::type;
 
-namespace Matrix_impl {
+namespace matrix_impl {
 
 // N > 1
 template <typename T, size_t N>
