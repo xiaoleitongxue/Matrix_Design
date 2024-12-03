@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.29)
 project(Matrix_Design VERSION 0.1 LANGUAGES CXX)
 
-set(default_build_type "Release")
+set(default_build_type "Debug")
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
   set(CMAKE_BUILD_TYPE "${default_build_type}" CACHE
